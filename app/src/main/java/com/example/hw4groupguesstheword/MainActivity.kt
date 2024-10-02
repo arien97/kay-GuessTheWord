@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -26,6 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -64,7 +67,7 @@ fun GuessTheWord() {
     val maxTries = 6
 
     var guessedLetters by rememberSaveable { mutableStateOf(listOf<Char>()) }
-    var triesLeft by rememberSaveable { mutableIntStateOf(maxTries) }
+    var triesLeft by rememberSaveable { mutableStateOf(maxTries) }
     var gameStarted by rememberSaveable { mutableStateOf(false) }
 
     if (!gameStarted) {
@@ -83,7 +86,7 @@ fun GuessTheWord() {
         if (windowInfo.isWideScreen) {
             Row(
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxSize().padding(start = 60.dp, end = 16.dp)
+                modifier = Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp)
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     LetterButtons(('A'..'Z').toList()) { letter ->
@@ -145,14 +148,25 @@ fun LetterButtons(letters: List<Char>, onLetterClick: (Char) -> Unit) {
         modifier = Modifier.padding(top = 40.dp, bottom = 60.dp)
     ) {
         letters.chunked(7).forEach { row ->
-            Row {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 row.forEach { letter ->
                     Button(
                         onClick = {
                             selectedLetters.add(letter)
                             onLetterClick(letter)
                         },
-                        enabled = !selectedLetters.contains(letter)
+                        enabled = !selectedLetters.contains(letter),
+                        shape = RoundedCornerShape(4.dp), // Less rounded corners
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Gray,
+                            contentColor = Color.White,
+                        ),
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .weight(1f) // Ensure buttons take equal space
                     ) {
                         Text(text = letter.toString())
                     }
