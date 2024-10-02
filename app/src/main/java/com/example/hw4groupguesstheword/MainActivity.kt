@@ -86,13 +86,14 @@ fun GuessTheWord() {
         if (windowInfo.isWideScreen) {
             Row(
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 16.dp)
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    LetterButtons(('A'..'Z').toList()) { letter ->
-                        if (wordToGuess.contains(letter, ignoreCase = true)) {
-                            guessedLetters = guessedLetters + letter
-                        } else {
+                    LetterButtons(('A'..'Z').toList(), guessedLetters) { letter ->
+                        guessedLetters = guessedLetters + letter
+                        if (!wordToGuess.contains(letter, ignoreCase = true)) {
                             triesLeft--
                         }
                     }
@@ -127,10 +128,9 @@ fun GuessTheWord() {
                     },
                     modifier = Modifier.weight(1f)
                 )
-                LetterButtons(('A'..'Z').toList()) { letter ->
-                    if (wordToGuess.contains(letter, ignoreCase = true)) {
-                        guessedLetters = guessedLetters + letter
-                    } else {
+                LetterButtons(('A'..'Z').toList(), guessedLetters) { letter ->
+                    guessedLetters = guessedLetters + letter
+                    if (!wordToGuess.contains(letter, ignoreCase = true)) {
                         triesLeft--
                     }
                 }
@@ -140,9 +140,7 @@ fun GuessTheWord() {
 }
 
 @Composable
-fun LetterButtons(letters: List<Char>, onLetterClick: (Char) -> Unit) {
-    val selectedLetters = remember { mutableStateListOf<Char>() }
-
+fun LetterButtons(letters: List<Char>, guessedLetters: List<Char>, onLetterClick: (Char) -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(top = 40.dp, bottom = 60.dp)
@@ -155,10 +153,9 @@ fun LetterButtons(letters: List<Char>, onLetterClick: (Char) -> Unit) {
                 row.forEach { letter ->
                     Button(
                         onClick = {
-                            selectedLetters.add(letter)
                             onLetterClick(letter)
                         },
-                        enabled = !selectedLetters.contains(letter),
+                        enabled = !guessedLetters.contains(letter),
                         shape = RoundedCornerShape(4.dp), // Less rounded corners
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Gray,
@@ -202,7 +199,6 @@ fun MainGameScreen(word: String, guessedLetters: List<Char>, triesLeft: Int, onR
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
