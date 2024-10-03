@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.Canvas
@@ -41,6 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hw4groupguesstheword.ui.theme.HW4GroupGuessTheWordTheme
@@ -114,7 +114,7 @@ fun GuessTheWord() {
     var guessedLetters by rememberSaveable { mutableStateOf(listOf<Char>()) }
     var triesLeft by rememberSaveable { mutableIntStateOf(maxTries) }
     var gameStarted by rememberSaveable { mutableStateOf(false) }
-    var hintsUsed by rememberSaveable { mutableStateOf(0) }
+    var hintsUsed by rememberSaveable { mutableIntStateOf(0) }
     var snackbarMessage by remember { mutableStateOf("") }
 
     val wordsWithHints = mapOf(
@@ -164,12 +164,14 @@ fun GuessTheWord() {
     } else {
         if (windowInfo.isWideScreen) {
             Row(
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 16.dp, end = 16.dp)
+                modifier = Modifier.fillMaxSize()
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                // Left side
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp)
+                ) {
                     LetterButtons(('A'..'Z').toList(), guessedLetters.map { it.uppercaseChar() }) { letter ->
                         if (letter !in guessedLetters) {
                             guessedLetters = guessedLetters + letter
@@ -178,23 +180,36 @@ fun GuessTheWord() {
                             }
                         }
                     }
-                    FlowerDisplay(triesLeft)
                     HintButton(hintsUsed, onHintClick)
                 }
-                MainGameScreen(
-                    word = wordToGuess,
-                    guessedLetters = guessedLetters,
-                    triesLeft = triesLeft,
-                    onRestart = {
-                        guessedLetters = listOf()
-                        triesLeft = maxTries
-                        gameStarted = false
-                        hintsUsed = 0
-                    },
-                    modifier = Modifier.weight(1f)
-                )
+
+                // Right side
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    FlowerDisplay(triesLeft)
+                    MainGameScreen(
+                        word = wordToGuess,
+                        guessedLetters = guessedLetters,
+                        triesLeft = triesLeft,
+                        onRestart = {
+                            guessedLetters = listOf()
+                            triesLeft = maxTries
+                            gameStarted = false
+                            hintsUsed = 0
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(top = 16.dp)
+                    )
+                }
             }
+
         } else {
+            // Portrait mode
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize()
@@ -237,6 +252,7 @@ fun GuessTheWord() {
         }
     }
 }
+
 
 @Composable
 fun HintButton(hintsUsed: Int, onHintClick: () -> Unit) {
@@ -288,7 +304,13 @@ fun LetterButtons(letters: List<Char>, guessedLetters: List<Char>, onLetterClick
 }
 
 @Composable
-fun MainGameScreen(word: String, guessedLetters: List<Char>, triesLeft: Int, onRestart: () -> Unit, modifier: Modifier = Modifier) {
+fun MainGameScreen(
+    word: String,
+    guessedLetters: List<Char>,
+    triesLeft: Int,
+    onRestart: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val displayWord = word.map { wordChar ->
         if (guessedLetters.any { it.equals(wordChar, ignoreCase = true) }) wordChar else '_'
     }.joinToString(" ")
@@ -296,30 +318,46 @@ fun MainGameScreen(word: String, guessedLetters: List<Char>, triesLeft: Int, onR
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize() // Ensure it fills the entire available space
+            .padding(16.dp)
     ) {
         Text(text = "Tries left: $triesLeft", style = MaterialTheme.typography.displaySmall)
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = displayWord, style = MaterialTheme.typography.displayLarge)
         Spacer(modifier = Modifier.height(36.dp))
+
+        // Game win or lose messages
         if (displayWord.replace(" ", "") == word) {
-            Text(text = "You won!", style = MaterialTheme.typography.displayMedium)
-            Button(onClick = onRestart) {
+            Text(
+                text = "You won!",
+                style = MaterialTheme.typography.displayMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
+            Button(
+                onClick = onRestart,
+                modifier = Modifier.align(Alignment.CenterHorizontally) // Ensure button is centered
+            ) {
                 Text(text = "Restart")
             }
         } else if (triesLeft <= 0) {
-            Text(text = "Better luck next time!", style = MaterialTheme.typography.displayMedium)
-            Button(onClick = onRestart) {
+            Text(
+                text = "Better luck next time!",
+                style = MaterialTheme.typography.displayMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
+            Button(
+                onClick = onRestart,
+                modifier = Modifier.align(Alignment.CenterHorizontally) // Ensure button is centered
+            ) {
                 Text(text = "Restart")
             }
         }
     }
-}
-
-
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-
 }
