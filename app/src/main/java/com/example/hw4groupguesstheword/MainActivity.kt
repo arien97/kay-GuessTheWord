@@ -175,7 +175,9 @@ fun LetterButtons(letters: List<Char>, guessedLetters: List<Char>, onLetterClick
 
 @Composable
 fun MainGameScreen(word: String, guessedLetters: List<Char>, triesLeft: Int, onRestart: () -> Unit, modifier: Modifier = Modifier) {
-    val displayWord = word.map { if (guessedLetters.contains(it.lowercaseChar())) it else '_' }.joinToString(" ")
+    val displayWord = word.map { wordChar ->
+        if (guessedLetters.any { it.equals(wordChar, ignoreCase = true) }) wordChar else '_'
+    }.joinToString(" ")
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -199,6 +201,8 @@ fun MainGameScreen(word: String, guessedLetters: List<Char>, triesLeft: Int, onR
         }
     }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable
