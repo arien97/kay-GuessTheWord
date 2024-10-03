@@ -249,7 +249,7 @@ fun HintButton(hintsUsed: Int, onHintClick: () -> Unit) {
             contentColor = Color.White,
         )
     ) {
-        Text("this is a fruit")
+        Text("Hint")
     }
 }
 
