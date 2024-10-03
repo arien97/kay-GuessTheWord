@@ -19,6 +19,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -26,13 +39,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.hw4groupguesstheword.ui.theme.HW4GroupGuessTheWordTheme
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +60,6 @@ class MainActivity : ComponentActivity() {
 fun calculateCurrentWindowInfo(): WindowInfo {
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp
-
     val isWideScreen = screenWidth >= 600
 
     return WindowInfo(
@@ -60,6 +71,40 @@ data class WindowInfo(
     val isWideScreen: Boolean
 )
 
+
+
+@Composable
+fun FlowerDisplay(petalsRemaining: Int) {
+    Box(
+        modifier = Modifier
+            .size(200.dp)
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        for (i in 0 until petalsRemaining) {
+            Canvas(
+                modifier = Modifier
+                    .size(200.dp)
+                    .padding(16.dp)
+            ) {
+                rotate(degrees = i * (360f / 6)) {
+                    drawCircle(
+                        color = Color.Magenta,
+                        radius = 40f,
+                        center = center.copy(y = center.y - 80f)
+                    )
+                }
+            }
+        }
+        Text(
+            text = "Flower",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+
 @Composable
 fun GuessTheWord() {
     val windowInfo = calculateCurrentWindowInfo()
@@ -67,8 +112,38 @@ fun GuessTheWord() {
     val maxTries = 6
 
     var guessedLetters by rememberSaveable { mutableStateOf(listOf<Char>()) }
-    var triesLeft by rememberSaveable { mutableStateOf(maxTries) }
+    var triesLeft by rememberSaveable { mutableIntStateOf(maxTries) }
     var gameStarted by rememberSaveable { mutableStateOf(false) }
+    var hintsUsed by rememberSaveable { mutableStateOf(0) }
+    var snackbarMessage by remember { mutableStateOf("") }
+
+    val wordsWithHints = mapOf(
+        "APPLE" to "A fruit that keeps the doctor away."
+    )
+
+    val onHintClick: () -> Unit = {
+        when (hintsUsed) {
+            0 -> {
+                snackbarMessage = wordsWithHints[wordToGuess.uppercase()] ?: "No hint available."
+                hintsUsed++
+            }
+            1 -> {
+                val remainingLetters = ('A'..'Z').filter { it !in guessedLetters && it !in wordToGuess.uppercase() }
+                val lettersToDisable = remainingLetters.shuffled().take(remainingLetters.size / 2)
+                guessedLetters = guessedLetters + lettersToDisable
+                triesLeft--
+                hintsUsed++
+                snackbarMessage = "Half of the incorrect letters have been disabled."
+            }
+            2 -> {
+                val vowels = wordToGuess.filter { it.uppercaseChar() in "AEIOU" }.toSet()
+                guessedLetters = guessedLetters + vowels
+                triesLeft--
+                hintsUsed++
+                snackbarMessage = "All vowels in the word have been revealed."
+            }
+        }
+    }
 
     if (!gameStarted) {
         Column(
@@ -78,6 +153,10 @@ fun GuessTheWord() {
         ) {
             Button(
                 onClick = { gameStarted = true },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Gray,
+                    contentColor = Color.White,
+                ),
             ) {
                 Text(text = "Start Game")
             }
@@ -91,14 +170,16 @@ fun GuessTheWord() {
                     .padding(start = 16.dp, end = 16.dp)
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    LetterButtons(('A'..'Z').toList(), guessedLetters) { letter ->
-                        guessedLetters = guessedLetters + letter
-                        if (!wordToGuess.contains(letter, ignoreCase = true)) {
-                            triesLeft--
+                    LetterButtons(('A'..'Z').toList(), guessedLetters.map { it.uppercaseChar() }) { letter ->
+                        if (letter !in guessedLetters) {
+                            guessedLetters = guessedLetters + letter
+                            if (!wordToGuess.contains(letter, ignoreCase = true)) {
+                                triesLeft--
+                            }
                         }
                     }
-                    // Placeholder for Panel 2
-                    Text(text = "Panel 2", modifier = Modifier.fillMaxWidth().padding(16.dp))
+                    FlowerDisplay(triesLeft)
+                    HintButton(hintsUsed, onHintClick)
                 }
                 MainGameScreen(
                     word = wordToGuess,
@@ -108,6 +189,7 @@ fun GuessTheWord() {
                         guessedLetters = listOf()
                         triesLeft = maxTries
                         gameStarted = false
+                        hintsUsed = 0
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -125,17 +207,49 @@ fun GuessTheWord() {
                         guessedLetters = listOf()
                         triesLeft = maxTries
                         gameStarted = false
+                        hintsUsed = 0
                     },
                     modifier = Modifier.weight(1f)
                 )
-                LetterButtons(('A'..'Z').toList(), guessedLetters) { letter ->
-                    guessedLetters = guessedLetters + letter
-                    if (!wordToGuess.contains(letter, ignoreCase = true)) {
-                        triesLeft--
+                FlowerDisplay(triesLeft)
+                LetterButtons(('A'..'Z').toList(), guessedLetters.map { it.uppercaseChar() }) { letter ->
+                    if (letter !in guessedLetters) {
+                        guessedLetters = guessedLetters + letter
+                        if (!wordToGuess.contains(letter, ignoreCase = true)) {
+                            triesLeft--
+                        }
                     }
                 }
+                HintButton(hintsUsed, onHintClick)
             }
         }
+
+        if (snackbarMessage.isNotEmpty()) {
+            Snackbar(
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text(snackbarMessage)
+            }
+            LaunchedEffect(snackbarMessage) {
+                delay(3000)
+                snackbarMessage = ""
+            }
+        }
+    }
+}
+
+@Composable
+fun HintButton(hintsUsed: Int, onHintClick: () -> Unit) {
+    Button(
+        onClick = onHintClick,
+        enabled = hintsUsed < 3,
+        modifier = Modifier.padding(8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Gray,
+            contentColor = Color.White,
+        )
+    ) {
+        Text("It is a fruit")
     }
 }
 
