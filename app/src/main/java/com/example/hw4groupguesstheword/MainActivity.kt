@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Snackbar
@@ -318,28 +319,26 @@ fun MainGameScreen(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = modifier
-            .fillMaxSize() // Ensure it fills the entire available space
-            .padding(16.dp)
+        modifier = modifier.fillMaxSize()
     ) {
-        Text(text = "Tries left: $triesLeft", style = MaterialTheme.typography.displaySmall)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = displayWord, style = MaterialTheme.typography.displayLarge)
-        Spacer(modifier = Modifier.height(36.dp))
 
-        // Game win or lose messages
+        Text(text = displayWord, style = MaterialTheme.typography.displayLarge)
+
+        Spacer(modifier = Modifier.height(20.dp)) // Space between word and the win/lose message
+
+        // Display win/lose message
         if (displayWord.replace(" ", "") == word) {
             Text(
                 text = "You won!",
                 style = MaterialTheme.typography.displayMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
-            Button(
-                onClick = onRestart,
-                modifier = Modifier.align(Alignment.CenterHorizontally) // Ensure button is centered
+            Button(onClick = onRestart,
+                modifier = Modifier.padding(bottom = 8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Gray,
+                    contentColor = Color.White,
+                )
             ) {
                 Text(text = "Restart")
             }
@@ -347,17 +346,18 @@ fun MainGameScreen(
             Text(
                 text = "Better luck next time!",
                 style = MaterialTheme.typography.displayMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
-            Button(
-                onClick = onRestart,
-                modifier = Modifier.align(Alignment.CenterHorizontally) // Ensure button is centered
+            Button(onClick = onRestart,
+                modifier = Modifier.padding(bottom = 8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Gray,
+                    contentColor = Color.White,
+                )
             ) {
                 Text(text = "Restart")
             }
         }
     }
 }
+
