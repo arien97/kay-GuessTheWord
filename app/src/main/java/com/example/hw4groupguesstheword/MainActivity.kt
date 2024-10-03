@@ -304,13 +304,21 @@ fun MainGameScreen(word: String, guessedLetters: List<Char>, triesLeft: Int, onR
         Spacer(modifier = Modifier.height(36.dp))
         if (displayWord.replace(" ", "") == word) {
             Text(text = "You won!", style = MaterialTheme.typography.displayMedium)
-            Button(onClick = onRestart) {
-                Text(text = "Restart")
+            Button(onClick = onRestart,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Gray,
+                    contentColor = Color.White),
+                ) {
+                Text(text = "New Game")
             }
         } else if (triesLeft <= 0) {
             Text(text = "Better luck next time!", style = MaterialTheme.typography.displayMedium)
-            Button(onClick = onRestart) {
-                Text(text = "Restart")
+            Button(onClick = onRestart,
+                colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Gray,
+                contentColor = Color.White,
+            ),) {
+                Text(text = "New Game")
             }
         }
     }
