@@ -116,7 +116,7 @@ fun GuessTheWord() {
     var triesLeft by rememberSaveable { mutableIntStateOf(maxTries) }
     var gameStarted by rememberSaveable { mutableStateOf(false) }
     var hintsUsed by rememberSaveable { mutableIntStateOf(0) }
-    var snackbarMessage by remember { mutableStateOf("") }
+    var hintMessage by rememberSaveable { mutableStateOf("") } // Save hint message
 
     val wordsWithHints = mapOf(
         "APPLE" to "A fruit that keeps the doctor away."
@@ -125,7 +125,7 @@ fun GuessTheWord() {
     val onHintClick: () -> Unit = {
         when (hintsUsed) {
             0 -> {
-                snackbarMessage = wordsWithHints[wordToGuess.uppercase()] ?: "No hint available."
+                hintMessage = wordsWithHints[wordToGuess.uppercase()] ?: "No hint available."
                 hintsUsed++
             }
             1 -> {
@@ -134,14 +134,14 @@ fun GuessTheWord() {
                 guessedLetters = guessedLetters + lettersToDisable
                 triesLeft--
                 hintsUsed++
-                snackbarMessage = "Half of the incorrect letters have been disabled."
+                hintMessage = "Half of the incorrect letters have been disabled."
             }
             2 -> {
                 val vowels = wordToGuess.filter { it.uppercaseChar() in "AEIOU" }.toSet()
                 guessedLetters = guessedLetters + vowels
                 triesLeft--
                 hintsUsed++
-                snackbarMessage = "All vowels in the word have been revealed."
+                hintMessage = "All vowels in the word have been revealed."
             }
         }
     }
@@ -181,7 +181,7 @@ fun GuessTheWord() {
                             }
                         }
                     }
-                    HintButton(hintsUsed, onHintClick)
+                    HintButtonWithMessage(hintsUsed, triesLeft, onHintClick, hintMessage)
                 }
 
                 // Right side
@@ -201,6 +201,7 @@ fun GuessTheWord() {
                             triesLeft = maxTries
                             gameStarted = false
                             hintsUsed = 0
+                            hintMessage = "" // Reset hint message on restart
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -224,6 +225,7 @@ fun GuessTheWord() {
                         triesLeft = maxTries
                         gameStarted = false
                         hintsUsed = 0
+                        hintMessage = "" // Reset hint message on restart
                     },
                     modifier = Modifier.weight(1f)
                 )
@@ -236,39 +238,33 @@ fun GuessTheWord() {
                         }
                     }
                 }
-                HintButton(hintsUsed, onHintClick)
-            }
-        }
-
-        if (snackbarMessage.isNotEmpty()) {
-            Snackbar(
-                modifier = Modifier.padding(8.dp)
-            ) {
-                Text(snackbarMessage)
-            }
-            LaunchedEffect(snackbarMessage) {
-                delay(3000)
-                snackbarMessage = ""
+                //HintButtonWithMessage(hintsUsed, triesLeft, onHintClick, hintMessage)
             }
         }
     }
 }
-
 
 @Composable
-fun HintButton(hintsUsed: Int, onHintClick: () -> Unit) {
-    Button(
-        onClick = onHintClick,
-        enabled = hintsUsed < 3,
-        modifier = Modifier.padding(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Gray,
-            contentColor = Color.White,
-        )
+fun HintButtonWithMessage(hintsUsed: Int, triesLeft: Int, onHintClick: () -> Unit, hintMessage: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(top = 16.dp)
     ) {
-        Text("Hint")
+        Button(
+            onClick = onHintClick,
+            enabled = hintsUsed < 3 && triesLeft > 1,  // Disable when triesLeft is 1 or hintsUsed reaches 3
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Gray,
+                contentColor = Color.White,
+            )
+        ) {
+            Text(text = "Hint")
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text = hintMessage, style = MaterialTheme.typography.bodyLarge)
     }
 }
+
 
 @Composable
 fun LetterButtons(letters: List<Char>, guessedLetters: List<Char>, onLetterClick: (Char) -> Unit) {
